@@ -1,5 +1,3 @@
-// utils/fetchDoujin.js
-
 const { API } = require('nhentai');
 const { EmbedBuilder, AttachmentBuilder } = require('discord.js');
 const axios = require('axios');
@@ -11,7 +9,6 @@ async function fetchDoujin(rawId, page = 1) {
   if (!Number.isInteger(id) || id < 1) return null;
 
   try {
-    // 1) Получаем метаданные
     const doujin = await api.fetchDoujin(id);
     if (!doujin) return null;
 
@@ -21,7 +18,6 @@ async function fetchDoujin(rawId, page = 1) {
       || 'Без названия';
     const totalPages = doujin.pages.length;
 
-    // 2) Формируем оригинальный URL и сразу заменяем на зеркало
     const orig = page === 1
       ? doujin.cover.url
       : doujin.pages[page - 1]?.url;
@@ -30,52 +26,43 @@ async function fetchDoujin(rawId, page = 1) {
     const imageUrl = orig
       .replace('i.nhentai.net', 'i1.nhentai.net')
       .replace('t.nhentai.net', 't1.nhentai.net');
-    console.log(`Downloading image from mirror: ${imageUrl}`);
 
-    // 3) Скачиваем картинку в память
     const { data } = await axios.get(imageUrl, {
       responseType: 'arraybuffer',
       timeout: 8000
     });
     const buffer = Buffer.from(data);
-    if (!buffer.length) {
-      console.error('❌ Empty image buffer');
-      return null;
-    }
+    if (!buffer.length) return null;
 
-    // 4) Определяем расширение (учтём webp, jpeg и др. + 'w' → webp)
     const extMatch = imageUrl.match(/\.(jpe?g|png|gif|webp|w)(?=$|\?)/i);
-    let ext = 'jpg';  // значение по умолчанию
+    let ext = 'jpg';
     if (extMatch) {
       const found = extMatch[1].toLowerCase();
       ext = found === 'w' ? 'webp' : found;
     }
     const filename = `cover.${ext}`;
 
-    // 5) Создаём attachment из буфера
     const attachment = new AttachmentBuilder(buffer, { name: filename });
 
-    // 6) Собираем теги и язык
     const tags = doujin.tags.all.length
       ? doujin.tags.all.map(t => t.name).join(', ')
       : 'Нет';
     const language = doujin.language || 'unknown';
 
-    // 7) Формируем Embed
     const embed = new EmbedBuilder()
       .setTitle(title)
       .setURL(`https://nhentai.net/g/${id}/${page}`)
       .setImage(`attachment://${filename}`)
       .setColor(0xff006f)
       .addFields(
-        { name: 'Язык',     value: language,                inline: true },
+        { name: 'Язык', value: language, inline: true },
         { name: 'Страница', value: `${page}/${totalPages}`, inline: true },
-        { name: 'Теги',     value: tags,                    inline: false }
+        { name: 'Теги', value: tags, inline: false }
       );
 
     return { embed, attachment, totalPages };
   } catch (err) {
-    console.error('❌ Ошибка в fetchDoujin:', err.message);
+    console.error('Ошибка в fetchDoujin:', err.message);
     return null;
   }
 }

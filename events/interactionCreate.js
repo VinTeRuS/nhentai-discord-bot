@@ -1,4 +1,3 @@
-// events/interactionCreate.js
 const { fetchDoujin } = require('../utils/fetchDoujin');
 const {
   ActionRowBuilder,
@@ -9,7 +8,6 @@ const {
 module.exports = {
   name: 'interactionCreate',
   async execute(interaction, client) {
-    // Слэш‑команды
     if (interaction.isChatInputCommand()) {
       const cmd = client.commands.get(interaction.commandName);
       if (!cmd) return;
@@ -21,15 +19,12 @@ module.exports = {
       }
     }
 
-    // Обработка кнопок
     if (!interaction.isButton()) return;
     await interaction.deferUpdate();
 
-    // customId: `${action}_${ownerId}_${id}_${page}`
     const [action, ownerId, id, pageStr] = interaction.customId.split('_');
     const page = parseInt(pageStr);
 
-    // Проверяем, что нажал тот же пользователь
     if (interaction.user.id !== ownerId) {
       return interaction.followUp({
         content: '❌ Только инициатор команды может нажимать эти кнопки.',
@@ -37,7 +32,6 @@ module.exports = {
       });
     }
 
-    // Вычисляем новую страницу
     let newPage = action === 'next' ? page + 1 : page - 1;
     const result = await fetchDoujin(id, newPage);
     if (!result) {
@@ -57,7 +51,6 @@ module.exports = {
         .setDisabled(newPage === result.totalPages)
     );
 
-    // Редактируем ответ
     return interaction.editReply({
       embeds: [result.embed],
       files: result.attachment ? [result.attachment] : [],

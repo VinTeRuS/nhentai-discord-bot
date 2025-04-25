@@ -3,7 +3,6 @@ const fs = require('fs');
 const path = require('path');
 const { Client, Collection, GatewayIntentBits, REST, Routes } = require('discord.js');
 
-// Инициализация клиента с необходимыми намерениями
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -12,7 +11,6 @@ const client = new Client({
   ]
 });
 
-// Загрузка команд
 client.commands = new Collection();
 const commands = [];
 const commandsPath = path.join(__dirname, 'commands');
@@ -25,7 +23,6 @@ for (const file of commandFiles) {
   }
 }
 
-// Регистрация слэш-команд для вашего сервера (guild)
 const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
 (async () => {
   try {
@@ -40,7 +37,6 @@ const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
   }
 })();
 
-// Загрузка событий
 const eventsPath = path.join(__dirname, 'events');
 const eventFiles = fs.readdirSync(eventsPath).filter(file => file.endsWith('.js'));
 for (const file of eventFiles) {

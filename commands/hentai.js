@@ -1,5 +1,3 @@
-// commands/hentai.js
-
 const {
   SlashCommandBuilder,
   ActionRowBuilder,
@@ -16,7 +14,6 @@ module.exports = {
   async execute(interaction) {
     await interaction.deferReply();
 
-    // Генерируем случайный ID
     const id = Math.floor(Math.random() * 500_000) + 1;
     const page = 1;
 
@@ -25,7 +22,6 @@ module.exports = {
       return interaction.editReply('Не удалось получить случайную галерею. Попробуй ещё раз.');
     }
 
-    // Кнопки «вперёд»/«назад» для перелистывания
     const ownerId = interaction.user.id;
     const row = new ActionRowBuilder().addComponents(
       new ButtonBuilder()

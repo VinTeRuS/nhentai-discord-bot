@@ -1,13 +1,13 @@
 {
   "name": "nhentai-bot",
   "version": "1.0.0",
-  "description": "Discord-бот для работы с nhentai",
+  "description": "Discord бот для работы с nhentai",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "VinTeRuS",
+  "license": "MIT",
   "dependencies": {
     "abort-controller": "^3.0.0",
     "discord.js": "^14.7.1",
