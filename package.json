@@ -10,7 +10,9 @@
   "license": "MIT",
   "dependencies": {
     "abort-controller": "^3.0.0",
+    "axios": "^1.12.2",
     "discord.js": "^14.7.1",
+    "dotenv": "^17.2.3",
     "nhentai": "^3.0.0",
     "node-fetch": "^2.7.0"
   }

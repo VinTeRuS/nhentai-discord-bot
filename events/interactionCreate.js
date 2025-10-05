@@ -1,60 +1,137 @@
-const { fetchDoujin } = require('../utils/fetchDoujin');
-const {
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle
-} = require('discord.js');
+const { Events } = require('discord.js');
 
 module.exports = {
-  name: 'interactionCreate',
+  name: Events.InteractionCreate,
   async execute(interaction, client) {
     if (interaction.isChatInputCommand()) {
-      const cmd = client.commands.get(interaction.commandName);
-      if (!cmd) return;
+      const command = client.commands.get(interaction.commandName);
+
+      if (!command) {
+        return;
+      }
+
       try {
-        await cmd.execute(interaction);
-      } catch (e) {
-        console.error('Command error:', e);
-        return interaction.reply({ content: 'Ошибка в команде.', ephemeral: true });
+        console.log(`${interaction.user.tag} использует /${interaction.commandName}`);
+        await command.execute(interaction);
+      } catch (error) {
+        console.error(`Ошибка при выполнении команды ${interaction.commandName}:`, error);
+        
+        const errorMessage = {
+          content: 'Произошла ошибка при выполнении команды',
+          ephemeral: true
+        };
+
+        try {
+          if (interaction.deferred || interaction.replied) {
+            await interaction.editReply(errorMessage);
+          } else {
+            await interaction.reply(errorMessage);
+          }
+        } catch (replyError) {
+          console.error('Не удалось отправить сообщение об ошибке:', replyError);
+        }
       }
     }
 
-    if (!interaction.isButton()) return;
-    await interaction.deferUpdate();
+    if (interaction.isButton()) {
+      try {
+        const [action, ownerId, id, currentPage] = interaction.customId.split('_');
+        
+        if (interaction.user.id !== ownerId) {
+          return interaction.reply({
+            content: 'Эта кнопка не для тебя',
+            ephemeral: true
+          });
+        }
 
-    const [action, ownerId, id, pageStr] = interaction.customId.split('_');
-    const page = parseInt(pageStr);
+        const { fetchDoujin } = require('../utils/fetchDoujin');
+        const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 
-    if (interaction.user.id !== ownerId) {
-      return interaction.followUp({
-        content: '❌ Только инициатор команды может нажимать эти кнопки.',
-        ephemeral: true
-      });
+        await interaction.deferUpdate();
+
+        let page = parseInt(currentPage);
+        const doujinId = parseInt(id);
+
+        switch (action) {
+          case 'prev':
+            page = Math.max(1, page - 1);
+            break;
+          case 'next':
+            page = page + 1;
+            break;
+          case 'info':
+            const infoResult = await fetchDoujin(doujinId, 1, true);
+            
+            if (!infoResult) {
+              return interaction.editReply({
+                content: 'Не удалось загрузить информацию',
+                components: []
+              });
+            }
+
+            return interaction.editReply({
+              embeds: [infoResult.infoEmbed],
+              files: [],
+              components: [
+                new ActionRowBuilder().addComponents(
+                  new ButtonBuilder()
+                    .setCustomId(`prev_${ownerId}_${doujinId}_1`)
+                    .setLabel('К галерее')
+                    .setStyle(ButtonStyle.Primary)
+                )
+              ]
+            });
+          default:
+            return;
+        }
+
+        const result = await fetchDoujin(doujinId, page);
+
+        if (!result) {
+          return interaction.editReply({
+            content: 'Не удалось загрузить страницу',
+            components: []
+          });
+        }
+
+        const row = new ActionRowBuilder().addComponents(
+          new ButtonBuilder()
+            .setCustomId(`prev_${ownerId}_${doujinId}_${page}`)
+            .setLabel('Назад')
+            .setStyle(ButtonStyle.Primary)
+            .setDisabled(page === 1),
+          new ButtonBuilder()
+            .setCustomId(`info_${ownerId}_${doujinId}`)
+            .setLabel('Инфо')
+            .setStyle(ButtonStyle.Secondary),
+          new ButtonBuilder()
+            .setCustomId(`next_${ownerId}_${doujinId}_${page}`)
+            .setLabel('Вперёд')
+            .setStyle(ButtonStyle.Primary)
+            .setDisabled(page === result.totalPages),
+          new ButtonBuilder()
+            .setLabel('Открыть')
+            .setStyle(ButtonStyle.Link)
+            .setURL(`https://nhentai.net/g/${doujinId}`)
+        );
+
+        await interaction.editReply({
+          embeds: [result.embed],
+          files: [result.attachment],
+          components: [row]
+        });
+
+      } catch (error) {
+        console.error('Ошибка обработки кнопки:', error);
+        try {
+          await interaction.editReply({
+            content: 'Произошла ошибка при обработке кнопки',
+            components: []
+          });
+        } catch (e) {
+          console.error('Не удалось отправить сообщение об ошибке:', e);
+        }
+      }
     }
-
-    let newPage = action === 'next' ? page + 1 : page - 1;
-    const result = await fetchDoujin(id, newPage);
-    if (!result) {
-      return interaction.followUp({ content: 'Не удалось загрузить страницу.', ephemeral: true });
-    }
-
-    const row = new ActionRowBuilder().addComponents(
-      new ButtonBuilder()
-        .setCustomId(`prev_${ownerId}_${id}_${newPage}`)
-        .setLabel('⬅️')
-        .setStyle(ButtonStyle.Primary)
-        .setDisabled(newPage === 1),
-      new ButtonBuilder()
-        .setCustomId(`next_${ownerId}_${id}_${newPage}`)
-        .setLabel('➡️')
-        .setStyle(ButtonStyle.Primary)
-        .setDisabled(newPage === result.totalPages)
-    );
-
-    return interaction.editReply({
-      embeds: [result.embed],
-      files: result.attachment ? [result.attachment] : [],
-      components: [row]
-    });
   }
 };
