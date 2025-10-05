@@ -1,20 +1,24 @@
+# nhentai Discord Bot
 
-# 📚 nhentai Discord Bot
-
-> A simple NSFW Discord bot that sends a random doujin from [nhentai.net](https://nhentai.net).  
-> ⚠️ Works only in NSFW channels.
+Discord bot for working with nhentai.net API
 
 ---
 
-## ✨ Features
+## Features
 
-- 🎲 `/nhentai random` command for random doujin selection  
-- 🖼 Easy navigation with buttons  
-- ⚡ Fast loading and user-friendly
+- `/hentai random` - random gallery
+- `/hentai id <code> [page]` - view gallery by ID with page selection
+- `/hentai search <tag> [sort]` - search by tag with sorting
+- `/hentai info <code>` - detailed gallery information
+- `/hentai trending [page]` - trending galleries
+- `/hentai popular [period]` - most popular galleries by period
+- `/hentai tags <include> [exclude]` - advanced tag search
+
+Button navigation, request caching, multiple CDNs for stability
 
 ---
 
-## 📦 Installation
+## Installation
 
 ```bash
 git clone https://github.com/VinTeRuS/nhentai-discord-bot.git
@@ -24,19 +28,19 @@ npm install
 
 ---
 
-## ⚙️ Configuration
+## Configuration
 
-Create a `.env` file and add the following:
+Create `.env` file:
 
 ```env
-TOKEN=your_discord_token
+DISCORD_TOKEN=your_discord_token
 CLIENT_ID=your_bot_id
-GUILD_ID=your_server_id (optional)
+GUILD_ID=your_server_id
 ```
 
 ---
 
-## 🚀 Running
+## Running
 
 ```bash
 node index.js
@@ -44,24 +48,28 @@ node index.js
 
 ---
 
-## 📚 Commands
+## Commands
 
-| Command            | Description                      |
-|--------------------|----------------------------------|
-| `/nhentai random`  | Sends a random doujin            |
-
-> ⛔ NSFW channels only!
-
----
-
-## 🔧 Dependencies
-
-- [discord.js](https://discord.js.org)
-- [dotenv](https://www.npmjs.com/package/dotenv)
-- [node-fetch](https://www.npmjs.com/package/node-fetch)
+| Command | Description |
+|---------|-------------|
+| `/hentai random` | Random gallery |
+| `/hentai id <code> [page]` | Gallery by ID |
+| `/hentai search <tag> [sort]` | Search by tag |
+| `/hentai info <code>` | Gallery information |
+| `/hentai trending [page]` | Trending now |
+| `/hentai popular [period]` | Popular by period |
+| `/hentai tags <include> [exclude]` | Advanced tag search |
 
 ---
 
-## 📄 License
+## Dependencies
 
-This project is licensed under the [MIT](./LICENSE) license.
+- discord.js
+- dotenv
+- axios
+
+---
+
+## License
+
+MIT
